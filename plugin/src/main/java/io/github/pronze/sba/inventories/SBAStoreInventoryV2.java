@@ -895,4 +895,4 @@ public class SBAStoreInventoryV2 extends AbstractStoreInventory {
         openForPlayer(Players.wrapPlayer(event.getPlayer()).as(SBAPlayerWrapper.class),
                 (GameStore) event.getStore());
     }
-}
+} Integer itemLevel = ToolLevelFilter.TOOL_LEVELS.get(materialName);
