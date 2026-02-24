@@ -228,7 +228,7 @@ public class SBAStoreInventoryV2 extends AbstractStoreInventory {
             // ===== ПРОВЕРКА УРОВНЯ ИНСТРУМЕНТА ПЕРЕД ПОКУПКОЙ =====
             String toolType = ToolLevelFilter.getToolType(materialName);
             if (toolType != null) {
-                Integer itemLevel = ToolLevelFilter.TOOL_LEVELS.get(materialName);
+                Integer itemLevel = ToolLevelFilter.getToolLevel(materialName);
                 int currentLevel = ToolLevelFilter.getCurrentToolLevel(player, toolType);
                 
                 // Если у игрока уже есть более высокий уровень
@@ -895,4 +895,4 @@ public class SBAStoreInventoryV2 extends AbstractStoreInventory {
         openForPlayer(Players.wrapPlayer(event.getPlayer()).as(SBAPlayerWrapper.class),
                 (GameStore) event.getStore());
     }
-} Integer itemLevel = ToolLevelFilter.TOOL_LEVELS.get(materialName);
+}
