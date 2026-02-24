@@ -13,6 +13,7 @@ import io.github.pronze.sba.manager.PlayerItemTracker;
 import io.github.pronze.sba.utils.Logger;
 import io.github.pronze.sba.utils.SBAUtil;
 import io.github.pronze.sba.utils.ShopUtil;
+import io.github.pronze.sba.utils.ToolLevelFilter;
 import io.github.pronze.sba.wrapper.SBAPlayerWrapper;
 import lombok.SneakyThrows;
 
@@ -128,6 +129,13 @@ public class SBAStoreInventoryV2 extends AbstractStoreInventory {
         Player player = event.getPlayer().as(Player.class);
         String itemName = event.getStack().getMaterial().platformName();
         
+        // ===== ПРОВЕРКА УРОВНЯ ИНСТРУМЕНТА =====
+        if (!ToolLevelFilter.isItemAvailable(player, itemName)) {
+            // Скрываем недоступный предмет
+            event.setStack(org.screamingsandals.lib.item.builder.ItemStackFactory.getAir());
+            return;
+        }
+        
         // Проверяем, есть ли у игрока улучшенная версия этого предмета
         String upgradedTo = PlayerItemTracker.getInstance().getNextUpgrade(player, itemName);
         
@@ -216,6 +224,33 @@ public class SBAStoreInventoryV2 extends AbstractStoreInventory {
         
         if (itemInfo.getProperties().size() == 0) {
             final var typeName = newItem.get().getType().name();
+            
+            // ===== ПРОВЕРКА УРОВНЯ ИНСТРУМЕНТА ПЕРЕД ПОКУПКОЙ =====
+            String toolType = ToolLevelFilter.getToolType(materialName);
+            if (toolType != null) {
+                Integer itemLevel = ToolLevelFilter.TOOL_LEVELS.get(materialName);
+                int currentLevel = ToolLevelFilter.getCurrentToolLevel(player, toolType);
+                
+                // Если у игрока уже есть более высокий уровень
+                if (currentLevel > -1 && itemLevel != null && itemLevel <= currentLevel) {
+                    LanguageService
+                        .getInstance()
+                        .get("shop.item_level_too_low")
+                        .replace("%current%", String.valueOf(currentLevel))
+                        .replace("%required%", String.valueOf(itemLevel))
+                        .send(Players.wrapPlayer(player));
+                    return Map.entry(false, false);
+                }
+                
+                // Если это не следующий уровень
+                if (currentLevel != -1 && itemLevel != null && itemLevel != currentLevel + 1) {
+                    LanguageService
+                        .getInstance()
+                        .get("shop.must_buy_previous_level")
+                        .send(Players.wrapPlayer(player));
+                    return Map.entry(false, false);
+                }
+            }
 
             final var afterUnderscore = typeName.substring(typeName.contains("_") ? typeName.indexOf("_") + 1 : 0);
             /**
